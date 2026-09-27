@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+*.egg
+.eggs/
+lib/
+lib64/
+
+# Виртуальные окружения
+.venv
+
+# Большие файлы данных
+*.csv
+*.xlsx
+*.xls
+*.zip
+*.tar.gz
+*.rar
+
+# Временные файлы
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+experiment_name: "CV_4W_imu"
+experiment_params:
+  kinematics: ["4W"]
+  channels: ["imu"]
+
+training_params:
+  seed: 0
+dataset_params:
+  data_dir: "data/train_set/processed"
+  labels_file: "data/train_set/labels.json"
+  data_frequency: 100.0
+  generalized_classes: True
+  time_features: ['min', 'max', 'mean', 'std', 'skew', 'kurt', 'rms', 'peak', 'p2p', 'crest', 'form', 'pulse']
+  freq_features: ['sum', 'max', 'mean', 'peak', 'var']

@@ -1,0 +1,46 @@
+experiments:
+  - experiment_params:
+      kinematics: ["4W"]
+      channels: ["imu"]
+
+  - experiment_params:
+      kinematics: ["4W"]
+      channels: ["servo"]
+
+  - experiment_params:
+      kinematics: ["4W"]
+      channels: ["imu", "servo"]
+
+  - experiment_params:
+      kinematics: ["6W"]
+      channels: ["imu"]
+
+  - experiment_params:
+      kinematics: ["6W"]
+      channels: ["servo"]
+
+  - experiment_params:
+      kinematics: ["6W"]
+      channels: ["imu", "servo"]
+
+  - experiment_params:
+      kinematics: ["4W", "6W"]
+      channels: ["imu"]
+
+  - experiment_params:
+      kinematics: ["4W", "6W"]
+      channels: ["servo"]
+
+  - experiment_params:
+      kinematics: ["4W", "6W"]
+      channels: ["imu", "servo"]
+
+training_params:
+  num_epochs: 100
+  batch_size: 32
+  seed: 0
+dataset_params:
+  data_dir: "data/train_set/processed"
+  labels_file: "data/train_set/labels.json"
+  data_frequency: 100.0
+  generalized_classes: False
