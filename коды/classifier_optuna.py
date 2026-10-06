@@ -4,52 +4,30 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 from scipy.stats import norm
-from scipy.fft import dct
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from tqdm import tqdm
 
-# Класс DCT
-class DCT:
-    def __init__(self, data, cutoff_amount=None, range_min=None, range_max=None):
-        self.range_min = range_min
-        self.range_max = range_max
-        self.N = len(data)
-        
-        self.coefficients = dct(data, type=2)
-        
-        if cutoff_amount is not None:
-            indices = sorted(range(len(self.coefficients)), 
-                           key=lambda i: abs(self.coefficients[i]), 
-                           reverse=True)
-            for idx in indices[cutoff_amount:]:
-                self.coefficients[idx] = 0
-
-    def numpy_func(self, x, scaled=False):
-        x = np.atleast_1d(x).astype(float)
-        
-        if scaled:
-            x = (x - self.range_min) / (self.range_max - self.range_min) * (self.N - 1)
-        
-        result = self.coefficients[0] / 2
-        for n in range(1, self.N):
-            result += self.coefficients[n] * np.cos((n / self.N) * np.pi * (x + 0.5))
-        result *= (1 / self.N)
-        
-        return result if len(result) > 1 else result[0]
+# Функция для вычисления DCT по коэффициентам из словаря (как в Optuna)
+def dct_predict(model, omega):
+    """Предсказывает Ke для одного значения omega по модели из Optuna"""
+    x_scaled = (omega - model['range_min']) / (model['range_max'] - model['range_min']) * (model['N'] - 1)
     
-    def __call__(self, x, scaled=False):
-        return self.numpy_func(x, scaled)
+    result = model['coeffs'][0] / 2
+    for n in range(1, model['N']):
+        result += model['coeffs'][n] * np.cos((n / model['N']) * np.pi * (x_scaled + 0.5))
+    return result * (1 / model['N'])
 
 # 1. Загрузка моделей DCT и данных
-MODELS_FILE = r"C:\UIRS\surface-classification\dct_models.pkl"
+MODELS_FILE = r"C:\UIRS\surface-classification\dct_models_from_optuna.pkl"
 print(f"\n[1] Загрузка моделей из: {MODELS_FILE}")
 with open(MODELS_FILE, 'rb') as file:
-    dct_models, dct_models_std = pickle.load(file)
+    dct_models, surfaces = pickle.load(file)
 
-surfaces = sorted(list(dct_models.keys()))
+# Явно преобразуем surfaces в список
+surfaces = list(surfaces)
 print(f"    Загружено моделей для {len(surfaces)} поверхностей")
 
-DATA_FILE = r"C:\UIRS\surface-classification\data_with_ke_omega.csv"
+DATA_FILE = r"C:\UIRS\surface-classification\data_from_optuna.csv"
 print(f"\n[2] Загрузка данных для классификации из: {DATA_FILE}")
 df = pd.read_csv(DATA_FILE)
 print(f"    Загружено {len(df):,} измерений")
@@ -66,8 +44,9 @@ print("\n[3] Классификация измерений ...")
 
 # 3. Основной цикл классификации 
 for exp_num, group in tqdm(df.groupby('number_exper'), desc="Эксперименты"):
-    # === ДОБАВЬ ЭТУ СТРОКУ ===
+    # Сортировка по времени (как мы обсуждали)
     group = group.sort_values('Time').reset_index(drop=True)
+    
     # СБРОС ПАМЯТИ
     mem_probabilities = np.ones(n_surfaces) / n_surfaces
     
@@ -80,31 +59,31 @@ for exp_num, group in tqdm(df.groupby('number_exper'), desc="Экспериме�
         
         for i, surface in enumerate(surfaces):
             model = dct_models[surface]
-            std = dct_models_std[surface]
+            std = model['std']  # std теперь внутри модели
             
-            expected_ke = model(omega, scaled=True)
+            expected_ke = dct_predict(model, omega)
             deviation = ke - expected_ke
             probabilities[i] = norm.pdf(deviation, loc=0, scale=std + 1e-3)
         
-        # Убрана ветка else, чтобы вероятности оставались нулевыми (как в Optuna)
+        # Нормализация без ветки else (как в Optuna)
         prob_sum = probabilities.sum()
         if prob_sum > 0:
             probabilities = probabilities / prob_sum
         
         # Предсказание БЕЗ памяти
-        pred_idx_raw = np.argmax(probabilities)
+        pred_idx_raw = int(np.argmax(probabilities))  # Явно преобразуем в int
         predicted_raw.append(surfaces[pred_idx_raw])
         
         # Обновление памяти
         mem_probabilities = ALPHA * mem_probabilities + (1 - ALPHA) * probabilities
         
-        # Убрана ветка else для памяти
+        # Нормализация памяти без ветки else
         mem_sum = mem_probabilities.sum()
         if mem_sum > 0:
             mem_probabilities = mem_probabilities / mem_sum
         
         # Итоговое предсказание
-        pred_idx_mem = np.argmax(mem_probabilities)
+        pred_idx_mem = int(np.argmax(mem_probabilities))  # Явно преобразуем в int
         predicted_labels.append(surfaces[pred_idx_mem])
         
         true_labels.append(true_surface)
@@ -132,7 +111,7 @@ table.auto_set_font_size(False)
 table.set_fontsize(10)
 table.scale(1, 1.5)
 
-plt.title('Classification Report: DCT Probabilistic Classifier (с памятью α=0.9)', 
+plt.title('Classification Report: DCT Probabilistic Classifier (с памятью α=0.989)', 
           fontsize=14, fontweight='bold', pad=20)
 plt.tight_layout()
 plt.savefig(r"C:\UIRS\surface-classification\classification_report_table.png", dpi=300, bbox_inches='tight')
