@@ -33,7 +33,7 @@ df = pd.read_csv(DATA_FILE)
 print(f"    Загружено {len(df):,} измерений")
 
 # 2. Настройка классификатора
-ALPHA = 0.9893133550785821  # Коэффициент памяти
+ALPHA =  0.9895765126599654
 n_surfaces = len(surfaces)
 
 true_labels = []

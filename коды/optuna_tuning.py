@@ -165,8 +165,7 @@ def classify_with_memory_vectorized(df_validation, dct_models, surfaces, alpha):
         row_sums = probs_matrix.sum(axis=1, keepdims=True)
         row_sums[row_sums == 0] = 1  # Избегаем деления на 0
         probs_matrix = probs_matrix / row_sums
-        
-        # Применяем память через кумулятивное сканирование
+
         # mem_prob[t] = alpha * mem_prob[t-1] + (1-alpha) * probs[t]
         predictions = np.zeros(n_samples, dtype=int)
         
@@ -222,7 +221,6 @@ print("ЗАПУСК OPTUNA (ПОЛНОСТЬЮ ВЕКТОРИЗОВАННЫЙ)")
 study = optuna.create_study(direction='maximize')
 study.optimize(objective, n_trials=100, gc_after_trial=True, show_progress_bar=True)
 
-# После study.optimize(...) вставь этот блок:
 best_params = study.best_params
 window_size = int(best_params['window_size'])
 n_bins = int(best_params['n_bins'])
@@ -236,14 +234,14 @@ df_windowed = cached_data[window_size]
 df_binned, df_trimmed = prepare_binned_data(df_windowed, n_bins)
 dct_models_optuna, surfaces_optuna = build_dct_models(df_binned, dct_coeffs)
 
-# Считаем std как в старом коде
+
 dct_models_std_optuna = {}
 for surface in surfaces_optuna:
     surf_data = df_binned[df_binned['surface'] == surface].sort_values('omega_bin')
     std_ke = surf_data['std_Ke'].fillna(0).values
     dct_models_std_optuna[surface] = np.nanmean(std_ke)
 
-# Сохраняем в формате, совместимом со старым кодом
+
 import pickle
 with open(r"C:\UIRS\surface-classification\dct_models_from_optuna.pkl", 'wb') as f:
     pickle.dump((dct_models_optuna, dct_models_std_optuna), f)
