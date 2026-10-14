@@ -160,7 +160,7 @@ def classify_with_memory_vectorized(df_validation, dct_models, surfaces, alpha):
             expected_ke = dct_predict_vectorized(model, omegas)  # Вектор
             deviation = kes - expected_ke
             probs_matrix[:, i] = norm.pdf(deviation, loc=0, scale=model['std'] + 1e-3)
-        
+
         # Нормализация вероятностей по строкам
         row_sums = probs_matrix.sum(axis=1, keepdims=True)
         row_sums[row_sums == 0] = 1  # Избегаем деления на 0
@@ -185,14 +185,14 @@ def classify_with_memory_vectorized(df_validation, dct_models, surfaces, alpha):
     return all_true, all_pred
 
 def objective(trial):
-    window_size = int(trial.suggest_float('window_size', 5.0, 30.0))
+    window_size = (trial.suggest_int('window_size', 5, 30))
     
-    n_bins_float = trial.suggest_float('n_bins', 11.0, 101.0)
-    n_bins = int(n_bins_float)
+    n_bins_float = trial.suggest_int('n_bins', 11, 101)
+    n_bins = (n_bins_float)
     if n_bins % 2 == 0:
         n_bins += 1
     
-    dct_coeffs = int(trial.suggest_float('dct_coeffs', 1.0, 10.0))
+    dct_coeffs = (trial.suggest_int('dct_coeffs', 1, 10))
     alpha = trial.suggest_float('alpha', 0.5, 0.99)
     
     df_windowed = cached_data[window_size]
@@ -214,7 +214,7 @@ def objective(trial):
     if len(true_labels) == 0:
         return 0.0
     
-    return accuracy_score(true_labels, predicted_labels)
+    return accuracy_score(true_labels, predicted_labels) 
 
 print("ЗАПУСК OPTUNA (ПОЛНОСТЬЮ ВЕКТОРИЗОВАННЫЙ)")
 
