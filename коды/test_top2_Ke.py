@@ -82,7 +82,7 @@ else:
 
     print(f"\nПредпосчитано {len(cached_data)} вариантов окна.")
     
-    print(f"💾 Сохранение кэша в {CACHE_FILE}...")
+    print(f"Сохранение кэша в {CACHE_FILE}...")
     with open(CACHE_FILE, 'wb') as f:
         pickle.dump(cached_data, f)
     print("Кэш успешно сохранен!")
